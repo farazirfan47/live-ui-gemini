@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Send, Bot, User, Code, Loader2, Eye, ExternalLink, Maximize2, Minimize2, X } from 'lucide-react'
+import { getApiUrl } from '../config'
 
 interface Message {
   id: string
@@ -92,7 +93,7 @@ export default function Home() {
     setStreamingText('')
 
     try {
-      const response = await fetch('http://localhost:8000/api/chat/stream', {
+      const response = await fetch(getApiUrl('/api/chat/stream'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
