@@ -9,19 +9,21 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+# Install system dependencies with retry mechanism
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
         gcc \
         g++ \
-        && rm -rf /var/lib/apt/lists/*
+        curl \
+        && rm -rf /var/lib/apt/lists/* \
+        && apt-get clean
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with retry and timeout
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --timeout 100 --retries 3 -r requirements.txt
 
 # Copy application code
 COPY . .
