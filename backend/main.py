@@ -33,14 +33,35 @@ app.add_middleware(
 # Initialize Gemini client
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-if not GOOGLE_API_KEY:
-    raise ValueError("GOOGLE_API_KEY environment variable is required. Please add it to backend/.env")
+# Initialize client only if API key is available
+client = None
+if GOOGLE_API_KEY:
+    # Import Google GenAI
+    from google import genai
+    from google.genai import types
+    client = genai.Client(api_key=GOOGLE_API_KEY)
+else:
+    print("WARNING: GOOGLE_API_KEY not found. Some features will be disabled.")
+    # Import types for type hints
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError:
+        # Create dummy types if google-genai is not available
+        class DummyTypes:
+            class Content:
+                def __init__(self, **kwargs): pass
+            class Part:
+                def __init__(self, **kwargs): pass
+            class Tool:
+                def __init__(self, **kwargs): pass
+            class GoogleSearch:
+                pass
+            class GenerateContentConfig:
+                def __init__(self, **kwargs): pass
+        types = DummyTypes()
+        genai = None
 
-# Import Google GenAI
-from google import genai
-from google.genai import types
-
-client = genai.Client(api_key=GOOGLE_API_KEY)
 MODEL_ID = "gemini-2.5-flash-lite-preview-06-17"
 
 # System instruction for dynamic UI generation with grounding
