@@ -93,6 +93,9 @@ export default function Home() {
     setStreamingText('')
 
     try {
+      // Debug: Log the backend URL being used
+      console.log('Backend URL:', getApiUrl('/api/chat/stream'))
+      
       const response = await fetch(getApiUrl('/api/chat/stream'), {
         method: 'POST',
         headers: {

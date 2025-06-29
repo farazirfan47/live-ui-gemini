@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
@@ -15,17 +15,11 @@ load_dotenv()
 
 app = FastAPI(title="Live UI Gemini API", description="AI-powered UI generation with Gemini", version="1.0.0")
 
-# Configure CORS
+# Configure CORS - Allow all origins for flexibility
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000", 
-        "http://127.0.0.1:3000",
-        "https://*.railway.app",
-        "https://*.vercel.app",
-        "https://*.netlify.app"
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],  # Allow all origins for now
+    allow_credentials=False,  # Set to False when using allow_origins=["*"]
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -139,13 +133,19 @@ def safe_json_encode(data):
         }
         return json.dumps(safe_data, ensure_ascii=False)
 
-
-
-
-
 @app.get("/")
 async def root():
     return {"message": "Live UI Gemini API with Grounding is running!", "model": MODEL_ID}
+
+@app.get("/api/cors-test")
+async def cors_test(request: Request):
+    """Test endpoint to debug CORS issues"""
+    origin = request.headers.get("origin", "No origin header")
+    return {
+        "message": "CORS test successful",
+        "origin": origin,
+        "headers": dict(request.headers)
+    }
 
 @app.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest):
