@@ -150,6 +150,30 @@ async def root():
 @app.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest):
     """Streaming chat endpoint for real-time UI generation with grounding"""
+    
+    # Check if Gemini client is available
+    if not client:
+        async def error_stream():
+            error_data = {
+                "type": "complete",
+                "final_text": "Error: GOOGLE_API_KEY environment variable is not set. Please configure it in Railway.",
+                "html_content": None,
+                "is_ui": False,
+                "conversation_id": str(uuid.uuid4()),
+                "is_complete": True
+            }
+            yield f"data: {safe_json_encode(error_data)}\n\n"
+        
+        return StreamingResponse(
+            error_stream(),
+            media_type="text/plain",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "Content-Type": "text/event-stream",
+            }
+        )
+    
     try:
         # Generate or use existing conversation ID
         conversation_id = request.conversation_id or str(uuid.uuid4())
@@ -598,7 +622,12 @@ async def delete_conversation(conversation_id: str):
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "model": MODEL_ID, "grounding_enabled": True}
+    return {
+        "status": "healthy", 
+        "model": MODEL_ID, 
+        "grounding_enabled": client is not None,
+        "api_key_configured": GOOGLE_API_KEY is not None
+    }
 
 # Store HTML content separately to avoid JSON issues
 html_storage = {}
